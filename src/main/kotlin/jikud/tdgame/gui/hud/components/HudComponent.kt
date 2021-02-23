@@ -1,6 +1,5 @@
 package jikud.tdgame.gui.hud.components
 
-import jikud.tdgame.JOGLEntry
 import jikud.tdgame.core.Drawing
 import jikud.tdgame.helpers.CColor
 import jikud.tdgame.helpers.PPoint
@@ -29,17 +28,17 @@ abstract class HudComponent {
     var gap = 0
     var strokeThickness = 1f
 
-    open fun draw() = with(JOGLEntry.GRF) {
+    open fun draw() = with(Drawing.GL) {
         if (!show) return
         if (showBackground) {
             glColor3f(background.r, background.g, background.b)
-            Drawing.fillRect(actualX, actualY, width - gap * 2f, height - gap * 2f)
+            Drawing.Rect(actualX, actualY, width - gap * 2f, height - gap * 2f, true)
 //            return
         }
         if (showForeground) {
             glColor3f(foreground.r, foreground.g, foreground.b)
             glLineWidth(strokeThickness)
-            Drawing.drawLineRect(actualX, actualY, width - gap * 2f, height - gap * 2f)
+            Drawing.Rect(actualX, actualY, width - gap * 2f, height - gap * 2f, false)
         }
     }
 }

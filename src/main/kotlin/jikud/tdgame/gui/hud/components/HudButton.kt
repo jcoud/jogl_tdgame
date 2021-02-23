@@ -1,14 +1,16 @@
 package jikud.tdgame.gui.hud.components
 
+import jikud.tdgame.gui.hud.event.GUIEventType
 import jikud.tdgame.gui.hud.event.GUIEventType.*
 import jikud.tdgame.gui.hud.event.IMouseAction
 import jikud.tdgame.helpers.CColor
 import java.awt.Color
 
-open class HudButton(override var text: String = "") : HudText(text) {
+class HudButton(text: String = "") : HudText(text) {
     var active = true
-    var eventType = NONE
+    var eventType: GUIEventType = NONE
     var action: IMouseAction? = null
+
 
     private fun drawInactiveState() {
         val b = background

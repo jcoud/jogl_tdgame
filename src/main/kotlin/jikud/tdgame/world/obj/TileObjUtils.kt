@@ -31,20 +31,20 @@ object TileObjUtils {
                 val s = 20
                 Entity.count++
                 Entity(
-                    pos.snapToGrid().mult((TDMain.bs.minus(s)).div(2)),
+                    pos.snapToGrid().mult(TDMain.bs.minus(s) / 2),
                     "E${Entity.count + 1}",
-                    s*1f,
-                    Color.RED.rgb,
+                    s * 1f,
+                    Color.WHITE.rgb,
 //                    Random.nextInt(0xffffff),
-                    1.3f
+                    (Random.nextInt(10) + 4f) / 5f
                 ).apply {
-                    health = (Random.nextInt(300) + 200)
+                    health = (Random.nextInt(300) + 2000)
                 } as T
             }
             NodePoint::class -> {
                 NodePoint.count++
                 NodePoint(
-                    pos.snapToGrid().mult(TDMain.bs.div(2)),
+                    pos.snapToGrid().mult(TDMain.bs / 2),
                     "N${Field.nodeListOrder.size + 1}",
                     Color.BLACK.rgb
                 ) as T
@@ -53,9 +53,9 @@ object TileObjUtils {
                 val s = 20
                 Tower.count++
                 Tower(
-                    pos.snapToGrid().mult((TDMain.bs.minus(s)).div(2)),
+                    pos.snapToGrid().mult((TDMain.bs - s) / 2),
                     "T${Field.towerListOrder.size + 1}",
-                    s*1f,
+                    s * 1f,
                     Random.nextInt(0xffffff)
 //                    Color.BLUE.rgb
                 ).apply { damage = (Random.nextInt(45) + 5) } as T
@@ -63,7 +63,7 @@ object TileObjUtils {
             Starter::class -> {
                 NodePoint.count++
                 Starter(
-                    pos.snapToGrid().mult(TDMain.bs.div(2)),
+                    pos.snapToGrid().mult(TDMain.bs / 2),
                     "Start",
                     Color.YELLOW.rgb
                 ) as T
@@ -71,7 +71,7 @@ object TileObjUtils {
             Ender::class -> {
                 NodePoint.count++
                 Ender(
-                    pos.snapToGrid().mult(TDMain.bs.div(2)),
+                    pos.snapToGrid().mult(TDMain.bs / 2),
                     "End",
                     Color.MAGENTA.rgb
                 ) as T

@@ -1,6 +1,5 @@
 package jikud.tdgame.world.obj
 
-import jikud.tdgame.JOGLEntry
 import jikud.tdgame.core.Drawing
 import jikud.tdgame.helpers.CColor
 import jikud.tdgame.helpers.PPoint
@@ -11,7 +10,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 
-open class Entity(
+class Entity(
     override var pos: PPoint,
     override var name: String,
     override var size: Float,
@@ -74,41 +73,45 @@ open class Entity(
 
     }
 
-    override fun show() = with(JOGLEntry.GRF) {
-        //triangle with pointing to next target
-        //default direction - right
+    //triangle with pointing to next target
+    //default direction - right
+    //for sake of be able to change angle in triangle shape - { a } parameter
+    private val x = size
+    private val y = size / 2
+    private val a = Math.toRadians(25.0)
+    private val l1X = (x - size * cos(0 + a)).toFloat()
+    private val l1Y = (y - size * sin(0 + a)).toFloat()
+    private val l2X = (x - size / 1.5).toFloat()
+    private val l2Y = y
+    private val l3X = (x - size * cos(0 - a)).toFloat()
+    private val l3Y = (y - size * sin(0 - a)).toFloat()
 
-        //for sake of be able to change angle in triangle shape - { a } parameter
-        val x = 0 + size
-        val y = 0 + size / 2
-        val a = Math.toRadians(25.0)
-        val l1X = (x - size * cos(0 + a)).toFloat()
-        val l1Y = (y - size * sin(0 + a)).toFloat()
-        val l2X = (x - size / 1.5).toFloat()
-        val l2Y = y
-        val l3X = (x - size * cos(0 - a)).toFloat()
-        val l3Y = (y - size * sin(0 - a)).toFloat()
+    private val vx = floatArrayOf(x, l1X, l2X, l3X)
+    private val vy = floatArrayOf(y, l1Y, l2Y, l3Y)
 
-        val vx = floatArrayOf(x, l1X, l2X, l3X)
-        val vy = floatArrayOf(y, l1Y, l2Y, l3Y)
 //        simple triangle shape:
 //        val poly = Polygon(
 //            intArrayOf(this.pos.xi, this.pos.xi, this.pos.xi + this.size),
 //            intArrayOf(this.pos.yi, this.pos.yi + this.size, this.pos.yi + this.size / 2),
 //            3
 //        )
-        //TODO: fix rotation
-        glPushMatrix()
+
+    override fun show() = with(Drawing.GL) {
+//        glPushMatrix()
         glTranslatef(center.x, center.y, 0f)
         glRotatef(angle * 57.29577951308232f, 0f, 0f, 1f)
         val c = CColor(color)
         glColor4f(c.r, c.g, c.b, 1f)
-        Drawing.drawLinePolygon(vx, vy, 4, 2.5f)
+        Drawing.Polygon(vx, vy, 4, false, 2.5f)
         glLoadIdentity()
         glColor4f(0f, 0f, 0f, .8f)
-        Drawing.fillPolygon(vx, vy, 4)
-        glPopMatrix()
-        glLoadIdentity()
+        Drawing.Polygon(vx, vy, 4, true)
+//        glPopMatrix()
+//        glLoadIdentity()
         super.show(showCenter = false, showName = true)
+    }
+
+    override fun showName(customName: String) {
+        super.showName("$customName $health")
     }
 }

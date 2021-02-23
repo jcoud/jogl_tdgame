@@ -2,6 +2,7 @@ package jikud.tdgame.gui.sets
 
 import jikud.tdgame.TDMain
 import jikud.tdgame.core.Drawing
+import jikud.tdgame.core.Global
 import jikud.tdgame.gui.GUI
 import jikud.tdgame.gui.GuiCore
 import jikud.tdgame.gui.hud.components.HudButton
@@ -64,15 +65,17 @@ class MenuGUI : GUI() {
     }
 
     private fun editorButtonAction() {
+        Global.TileTimer_isUpdatable = false
         Drawing.drawWorld = true
         Field.task = Field.TaskType.NONE
         GuiCore.switchToAnotherGuiGroup(GuiCore.editorGUI)
     }
 
     private fun menuPlay() {
+        Global.TileTimer_isUpdatable = true
         Drawing.drawWorld = true
-        Field.task = Field.TaskType.MOVE
-        GuiCore.switchToAnotherGuiGroup(GuiCore.playerGUI)
+        Field.task = Field.TaskType.RUN
+        GuiCore.switchToAnotherGuiGroup(if (GuiCore.previous_gui == null) GuiCore.playerGUI else GuiCore.previous_gui!!)
     }
 
     override fun canvas(): HudPanel = p

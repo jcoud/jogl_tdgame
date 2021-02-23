@@ -1,9 +1,7 @@
 package jikud.tdgame.world.obj.gate
 
-import jikud.tdgame.JOGLEntry
 import jikud.tdgame.TDMain
 import jikud.tdgame.core.Drawing
-import jikud.tdgame.core.GameTime
 import jikud.tdgame.helpers.CColor
 import jikud.tdgame.helpers.PPoint
 import jikud.tdgame.world.Field
@@ -17,16 +15,19 @@ class Starter(pos: PPoint, name: String, color: Int) : NodePoint(pos, name, colo
     //    private var prevInstanceOfObj: Entity? = null
     private var spawnTimer = .0
 
+    init {
+        initTimer()
+    }
+
     override fun update() {
         spawnTimer = 1.0
         spawn()
         super.update()
     }
 
-    private val timer = GameTime.Timer()
-
     private fun spawn() {
-        if (!timer.trigger(spawnTimer)) return
+        startInternalTimer()
+        if (!timer!!.trigger(spawnTimer)) return
         val e = TileObjUtils.makeWithRandomParams<Entity>(PPoint(this.center))
         e.target = Field.nodeListOrder[1]
         FieldProcessorQueue.queueAdd(e)
@@ -35,14 +36,19 @@ class Starter(pos: PPoint, name: String, color: Int) : NodePoint(pos, name, colo
 
     override fun show() {
         val c = CColor(this.color)
-        JOGLEntry.GRF.glColor3f(c.r, c.g, c.b)
-        Drawing.drawLineRect(
+        Drawing.GL.glColor3f(c.r, c.g, c.b)
+        Drawing.Rect(
             this.pos.x - TDMain.bs / 2,
             this.pos.y - TDMain.bs / 2,
             TDMain.bs * 1f,
             TDMain.bs * 1f,
+            false,
             3f
         )
         super.show()
+    }
+
+    override fun showName(customName: String) {
+        super.showName("$customName T${timer!!.current} SP: $spawnTimer")
     }
 }

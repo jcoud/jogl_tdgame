@@ -1,6 +1,5 @@
 package jikud.tdgame.gui
 
-import jikud.tdgame.JOGLEntry.Companion.GRF
 import jikud.tdgame.core.Drawing
 import jikud.tdgame.gui.hud.components.HudButton
 import jikud.tdgame.gui.hud.components.HudPanel
@@ -14,8 +13,8 @@ abstract class GUI {
 
     fun drawGui() {
         val c = canvas()
-        GRF.glColor3f(0f, 0f, 0f)
-        Drawing.fillRect(c.pos.x, c.pos.y, c.width.toFloat(), c.height.toFloat())
+        Drawing.GL.glColor3f(0f, 0f, 0f)
+        Drawing.Rect(c.pos.x, c.pos.y, c.width.toFloat(), c.height.toFloat(), true)
         c.draw()
     }
 

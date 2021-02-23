@@ -1,16 +1,15 @@
 package jikud.tdgame.world.obj
 
-import jikud.tdgame.JOGLEntry
 import jikud.tdgame.core.Drawing
 import jikud.tdgame.core.GameTime
+import jikud.tdgame.core.Global
+import jikud.tdgame.core.Renderer
 import jikud.tdgame.helpers.CColor
 import jikud.tdgame.helpers.PPoint
 import jikud.tdgame.world.FieldProcessorQueue
 import jikud.tdgame.world.obj.gate.Ender
 import jikud.tdgame.world.obj.gate.Starter
 import java.awt.Color
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 
 abstract class TileObj(
@@ -48,18 +47,31 @@ abstract class TileObj(
         val EmptyTower = TileObjUtils.getEmptyTile<Tower>(Tower::class.java)
     }
 
+    // == Internal Timer Counter ==
+    var timer: GameTime.Timer? = null
+
+    fun initTimer() {
+        timer = GameTime.Timer()
+    }
+
     override fun update() {
         if (state == TileObjState.DEAD) FieldProcessorQueue.queueRemove(this)
         if (this is IMovable) move()
+        if (timer == null) return
+        if (!Global.TileTimer_isUpdatable && timer!!.started)
+            timer!!.pause()
+        else
+            timer!!.unpause()
+        print("delta: $timer\r")
     }
 
-    // == Internal Timer Counter ==
-    private val timer = GameTime.Timer()
 
     fun startInternalTimer() {
+        if (timer == null)
+            throw NullPointerException("Timer has not been initialized!")
         if (awakened) return
         awakened = true
-        timer.start()
+        timer!!.start()
     }
     // ======
 
@@ -67,7 +79,7 @@ abstract class TileObj(
         this.show(showCenter = true, showName = true)
     }
 
-    open fun show(showCenter: Boolean, showName: Boolean) {
+    open fun show(showCenter: Boolean = true, showName: Boolean = true) {
         if (showName) showName()
         if (showCenter) showCenterDot()
     }
@@ -78,19 +90,12 @@ abstract class TileObj(
             this.pos.x = value.x - this.size / 2
             this.pos.y = value.y - this.size / 2
         }
-    private val f = Drawing.FontRendering(JOGLEntry.FONT.deriveFont(.7f))
+    private val F = Drawing.FontRendering(Renderer.FONT.deriveFont(.7f))
 
-    private fun showName() = with(JOGLEntry.GRF) {
-        val s =
-            when (this@TileObj) {
-                is Entity -> "$name H$health"
-                is Tower -> "$name T${BigDecimal(timer.current).setScale(2, RoundingMode.DOWN)} D$damage"
-                is Projectile -> return
-                else -> name
-            }
-        f.drawString(
+    open fun showName(customName: String = this.name) = with(Drawing.GL) {
+        F.drawString(
             CColor(.7f, .7f, .5f, .7f),
-            s,
+            customName,
             center.x,
             center.y - 25
         )
@@ -99,8 +104,8 @@ abstract class TileObj(
 
     private fun showCenterDot() {
         val r = 3f
-        JOGLEntry.GRF.glColor3f(.0f, .0f, .0f)
-        Drawing.fillCircle(center.x, center.y, r)
+        Drawing.GL.glColor3f(.0f, .0f, .0f)
+        Drawing.Circle(center.x, center.y, r, true)
 //        GL11.glLoadIdentity()
     }
 

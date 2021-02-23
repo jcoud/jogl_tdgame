@@ -1,70 +1,66 @@
 package jikud.tdgame.core
 
+import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GL2.*
 import com.jogamp.opengl.util.awt.TextRenderer
-import jikud.tdgame.JOGLEntry
 import jikud.tdgame.gui.GuiCore
 import jikud.tdgame.helpers.CColor
 import jikud.tdgame.helpers.FFont
 import jikud.tdgame.world.FieldDraw
+import java.awt.geom.Rectangle2D
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
 
 object Drawing {
-    class FontRendering(font: FFont = JOGLEntry.FONT) {
-        private var t: TextRenderer = TextRenderer(font, true)
+    lateinit var GL: GL2
+
+    class FontRendering(val font: FFont = Renderer.FONT) {
+        var renderer: TextRenderer = TextRenderer(font, true)
+
+        fun bounds(text: String): Rectangle2D {
+            return renderer.getBounds(text)
+        }
 
         fun drawString(color: CColor, text: String, x: Float, y: Float) {
-            t.setColor(color.color)
-            t.beginRendering(JOGLEntry.WIDTH, JOGLEntry.HEIGHT)
-            val r = t.getBounds(text)
-            t.smoothing = true
-            t.draw(text, (x - r.width / 2).toInt(), (JOGLEntry.HEIGHT - r.height / 2 - y).toInt())
-            t.endRendering()
-            t.flush()
+            renderer.setColor(color.color)
+            renderer.beginRendering(Renderer.INIT_WIDTH, Renderer.INIT_HEIGHT)
+            renderer.smoothing = true
+            renderer.draw(
+                text,
+                (x - bounds(text).width / 2).toInt(),
+                (Renderer.INIT_HEIGHT - bounds(text).height / 2 - y).toInt()
+            )
+            renderer.endRendering()
+            renderer.flush()
         }
     }
-
-    fun fillRect(x: Float, y: Float, width: Float, height: Float) = with(JOGLEntry.GRF) {
-        glBegin(GL_QUADS)
-        glVertex2f(x, y)
-        glVertex2f(x + width, y)
-        glVertex2f(x + width, y + height)
-        glVertex2f(x, y + height)
-        glEnd()
-        glLoadIdentity()
-    }
-
-    fun drawLineRect(x: Float, y: Float, width: Float, height: Float, lineScale: Float = 1f) = with(JOGLEntry.GRF) {
+    fun Rect(x: Float, y: Float, width: Float, height: Float, fill: Boolean, lineScale: Float = 1f): Unit = with(GL) {
         glPushMatrix()
-        glLineWidth(lineScale)
-        glBegin(GL_LINE_LOOP)
-        glVertex2f(x, y)
-        glVertex2f(x + width, y)
-        glVertex2f(x + width, y + height)
-        glVertex2f(x, y + height)
+        glTranslatef(x, y, 0f)
+        if (fill) glBegin(GL_QUADS)
+        else {
+            glLineWidth(lineScale)
+            glBegin(GL_LINE_LOOP)
+        }
+        glVertex2f(0f, 0f)
+        glVertex2f(width, 0f)
+        glVertex2f(width, height)
+        glVertex2f(0f, height)
         glEnd()
         glPopMatrix()
         glLoadIdentity()
     }
 
-    fun fillCircle(x: Float, y: Float, r: Float) = with(JOGLEntry.GRF) {
-        glTranslatef(x, y, 0f)
-        glBegin(GL_POLYGON)
-        for (i in 0..360 step 10) {
-            glVertex2d(r * cos(Math.toRadians(i.toDouble())), r * sin(Math.toRadians(i.toDouble())))
-        }
-        glEnd()
-        glLoadIdentity()
-    }
-
-    fun drawLineCircle(x: Float, y: Float, r: Float, lineScale: Float = 1f) = with(JOGLEntry.GRF) {
+    fun Circle(x: Float, y: Float, r: Float, fill: Boolean, lineScale: Float = 1f) = with(GL) {
         glPushMatrix()
-        glLineWidth(lineScale)
         glTranslatef(x, y, 0f)
-        glBegin(GL_LINE_LOOP)
+        if (fill) glBegin(GL_POLYGON)
+        else {
+            glLineWidth(lineScale)
+            glBegin(GL_LINE_LOOP)
+        }
         for (i in 0..360 step 10) {
             glVertex2d(r * cos(Math.toRadians(i.toDouble())), r * sin(Math.toRadians(i.toDouble())))
         }
@@ -73,9 +69,8 @@ object Drawing {
         glLoadIdentity()
     }
 
-    fun drawLine(x1: Float, y1: Float, x2: Float, y2: Float, lineScale: Float = 1f) = with(JOGLEntry.GRF) {
+    fun Line(x1: Float, y1: Float, x2: Float, y2: Float, lineScale: Float = 1f) = with(GL) {
         glPushMatrix()
-//        glTranslatef(x1, x2, 0f)
         glLineWidth(lineScale)
         glBegin(GL_LINES)
         glVertex3f(x1, y1, 0f)
@@ -85,7 +80,7 @@ object Drawing {
         glLoadIdentity()
     }
 
-    fun fillPolygon(fax: FloatArray, fay: FloatArray, n: Int) = with(JOGLEntry.GRF) {
+    fun Polygon(fax: FloatArray, fay: FloatArray, n: Int, fill: Boolean, lineScale: Float = 1f) = with(GL) {
         var ax = 0f
         var ay = 0f
         for (i in 0 until n) {
@@ -105,59 +100,25 @@ object Drawing {
         val yy = cy / (6 * a)
         glPushMatrix()
         glTranslatef(xx, yy, 0f)
-        glBegin(GL_POLYGON)
+        if (fill) glBegin(GL_POLYGON)
+        else {
+            glLineWidth(lineScale)
+            glBegin(GL_LINE_LOOP)
+        }
         for (i in 0 until n) {
             glVertex2f(fax[i], fay[i])
         }
         glEnd()
-        glTranslatef(-xx, -yy, 0f)
         glPopMatrix()
         glLoadIdentity()
     }
-
-    //val l = sqrt(xx*xx + yy*yy)
-//        drawLineCircle(0f, 0f, l, lineScale)
-    fun drawLinePolygon(fax: FloatArray, fay: FloatArray, n: Int, lineScale: Float = 1f) = with(JOGLEntry.GRF) {
-        var ax = 0f
-        var ay = 0f
-        for (i in 0 until n) {
-            val ii = if (i + 1 > n - 1) 0 else i + 1
-            ax += fax[i] * fay[ii]
-            ay += fax[ii] * fay[i]
-        }
-        val a = abs(ax - ay) / 2f
-        var cx = 0f
-        var cy = 0f
-        for (i in 0 until n) {
-            val ii = if (i + 1 > n - 1) 0 else i + 1
-            cx += (fax[i] + fax[ii]) * (fax[i] * fay[ii] - fax[ii] * fay[i])
-            cy += (fay[i] + fay[ii]) * (fax[i] * fay[ii] - fax[ii] * fay[i])
-        }
-        val xx = cx / (6 * a)
-        val yy = cy / (6 * a)
-        glPushMatrix()
-        glLineWidth(lineScale)
-        glTranslatef(xx, yy, 0f)
-        glBegin(GL_LINE_LOOP)
-        for (i in 0 until n) {
-            glVertex2f(fax[i], fay[i])
-        }
-        glEnd()
-        glTranslatef(-xx, -yy, 0f)
-        glPopMatrix()
-        glLoadIdentity()
-    }
-//    }
-
 
     var drawWorld = false
     fun visualize() {
 
         GuiCore.repaintProcess()
-        if (drawWorld) {
-            FieldDraw.repaintProcess()
-//            drawCommon()
-        }
+        if (!drawWorld) return
+        FieldDraw.repaintProcess()
     }
 
 //    private fun drawCommon() {

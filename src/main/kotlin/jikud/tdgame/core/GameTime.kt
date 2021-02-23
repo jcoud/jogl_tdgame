@@ -36,18 +36,43 @@ object GameTime {
     }
 
     class Timer {
-        private var timeSinceStarted = 0L
-        val current get() = if (started) (System.currentTimeMillis() - timeSinceStarted).toDouble() else 0.0
-        private var started = false
+        private var timeSinceStarted = 0.0
+        private var timeSinceStartedActual = 0.0
+        val actual get() = System.currentTimeMillis() - timeSinceStartedActual
+        val current get() =
+            if (started)
+                if (paused)
+                    internalLastUpdated
+                else
+                    System.currentTimeMillis() - timeSinceStarted - deltaPaused
+            else 0.0
+
+        //TODO: доделать возможность останавливать время на паузу
+        var started = false
+        private var internalLastUpdated = 0.0
+        private var paused = false
+        private var timeSincePaused = 0.0
+        private val deltaPaused get() = if (paused) System.currentTimeMillis() - timeSincePaused else 0.0
 
         fun start() {
             if (started) return
             started = true
-            timeSinceStarted = System.currentTimeMillis()
+            timeSinceStarted = System.currentTimeMillis().toDouble()
+            timeSinceStartedActual = System.currentTimeMillis().toDouble()
+        }
+
+        fun pause() {
+            paused = true
+            internalLastUpdated = current
+            timeSincePaused = System.currentTimeMillis().toDouble()
+        }
+
+        fun unpause() {
+            paused = false
         }
 
         fun trigger(time: Double, timerName: TimerNames = TimerNames.SEC): Boolean {
-            start()
+//            start()
             if (current == 0.0) return false
             val t: Double = when (timerName) {
                 TimerNames.MLS -> mls(current).toDouble()
@@ -56,10 +81,19 @@ object GameTime {
                 TimerNames.HRS -> hrs(current)
             }
             if (t >= time) {
-                timeSinceStarted = System.currentTimeMillis()
+                timeSinceStarted = System.currentTimeMillis().toDouble()
                 return true
             }
             return false
+        }
+
+        override fun toString(): String {
+            return "{ac: $actual | " +
+                    "cu: $current | " +
+                    "lu: $internalLastUpdated | " +
+                    "pa: $paused | " +
+                    "tp: $timeSincePaused | " +
+                    "dp: $deltaPaused}"
         }
     }
 }

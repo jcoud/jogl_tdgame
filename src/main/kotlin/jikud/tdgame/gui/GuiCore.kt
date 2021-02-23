@@ -22,6 +22,7 @@ import java.awt.Point
 
 object GuiCore {
     var current_gui: GUI? = null
+    var previous_gui: GUI? = null
 
     private val towerGUI = TowerGUI()
     val playerGUI = PlayerGUI()
@@ -44,8 +45,9 @@ object GuiCore {
 
     fun switchToAnotherGuiGroup(gui: GUI) {
         if (this.current_gui == gui) return
+        this.previous_gui = current_gui
         this.current_gui = gui
-        println(gui::class.java.simpleName)
+//        println(gui::class.java.simpleName)
     }
 
     class InputTransfer(c: GLWindow) : MouseListener, KeyListener {
@@ -85,7 +87,7 @@ object GuiCore {
         override fun mouseClicked(p0: MouseEvent) {}
         override fun mouseExited(p0: MouseEvent) {}
         override fun keyPressed(p0: KeyEvent) {
-            if (current_gui !is PlayerGUI) return
+            if (current_gui is MenuGUI) return
             if (p0.keyCode != KeyEvent.VK_ESCAPE) return
             Drawing.drawWorld = false
             Field.task = Field.TaskType.NONE

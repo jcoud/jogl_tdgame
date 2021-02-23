@@ -1,15 +1,26 @@
 package jikud.tdgame.gui.hud.components
 
+import com.jogamp.opengl.util.awt.TextRenderer
 import jikud.tdgame.core.Drawing
 import jikud.tdgame.helpers.CColor
 import java.awt.Color
 
-open class HudText(open var text: String = "") : HudComponent() {
+open class HudText() : HudComponent() {
     var textColor = CColor(Color.WHITE)
     private val f = Drawing.FontRendering()
+    var text: String = ""
+
+    constructor(text: String) : this() {
+        this.text = text
+    }
 
     init {
         showBackground = false
+        if (text.isNotEmpty()) {
+            val b = f.bounds(text)
+            val s = ((b.width - width) / width).toFloat()
+            f.renderer = TextRenderer(f.font.deriveFont(s))
+        }
     }
 
     override fun draw() {

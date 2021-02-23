@@ -54,7 +54,7 @@ object Field {
     var task = TaskType.NONE
 
     enum class TaskType {
-        NEW_GAME, MOVE, NONE
+        NEW_GAME, RUN, STOP, NONE
     }
 
     lateinit var entityListOrder: LinkedList<Entity>
@@ -67,7 +67,6 @@ object Field {
 
     private lateinit var start: Starter
     private lateinit var end: Ender
-    var doMove: Boolean = true
 
     fun saveField(): HashMap<String, WorldSaveDataHolder> {
         val a = LinkedHashMap<String, WorldSaveDataHolder>()
@@ -101,7 +100,7 @@ object Field {
         entityListOrder = LinkedList()
         nodeListOrder = LinkedList()
         towerListOrder = LinkedList()
-        newStart()
+        restart()
     }
 
     private fun setupRandomMap() {
@@ -120,7 +119,7 @@ object Field {
         towerListOrder.add(TileObjUtils.makeWithRandomParams())
     }
 
-    fun newStart() {
+    private fun restart() {
         entityListOrder.clear()
         nodeListOrder.clear()
         towerListOrder.clear()
@@ -129,7 +128,6 @@ object Field {
             setupRandomMap()
         else
             setupMapFromSDT(sdtMap)
-        doMove = true
     }
 
     fun add(obj: TileObj) {
@@ -162,39 +160,31 @@ object Field {
         entityListOrder.forEach(IUpdatable::update)
         nodeListOrder.forEach(IUpdatable::update)
         towerListOrder.forEach(IUpdatable::update)
-
     }
 
-    fun applyTasks() {
+    fun update() {
         when (task) {
-            TaskType.MOVE -> {
+            TaskType.RUN -> {
                 run()
             }
             TaskType.NEW_GAME -> {
-                newStart()
+                restart()
             }
-            TaskType.NONE -> {
-                doMove = false
-                return
-            }
+            TaskType.STOP,
+            TaskType.NONE -> return
         }
-        task = TaskType.MOVE
+        task = TaskType.RUN
     }
 
     private fun hasNodeAt(posInd: Int): Boolean {
-        return if (nodeListOrder.containsFieldIndex(posInd)) {
-            val pi = nodeListOrder.getByPosIndex(posInd)
-            pi != null && pi.isNotEmpty()
-        } else false
+        val pi = nodeListOrder.getByPosIndex(posInd)
+        return pi != null && pi.isNotEmpty()
     }
 
 
     private fun hasTowerAt(posInd: Int): Boolean {
-        return if (towerListOrder.containsFieldIndex(posInd)) {
-            val pi = towerListOrder.getByPosIndex(posInd)
-            pi != null && pi.isNotEmpty()
-        } else false
-
+        val pi = towerListOrder.getByPosIndex(posInd)
+        return pi != null && pi.isNotEmpty()
     }
 
     fun removeNodeAt(posInd: Int) {

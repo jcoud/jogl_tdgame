@@ -1,6 +1,5 @@
 package jikud.tdgame.world
 
-import jikud.tdgame.JOGLEntry
 import jikud.tdgame.TDMain
 import jikud.tdgame.core.Drawing
 import jikud.tdgame.gui.GuiCore
@@ -22,7 +21,7 @@ object FieldDraw {
         drawCursorGridTileHovering()
         drawNodeConnections()
         Field.grid.forEach { o -> o.forEach { it.rect() } }
-        Field.grid.forEach { o -> o.forEach { it.highlight() } }
+//        Field.grid.forEach { o -> o.forEach { it.highlight() } }
         showObj()
     }
 
@@ -30,9 +29,9 @@ object FieldDraw {
     private fun drawCursorGridTileHovering() {
         if (GuiCore.InputTransfer.y >= TDMain.fieldHeight) return
         val p = PPoint(GuiCore.InputTransfer.x, GuiCore.InputTransfer.y)
-        JOGLEntry.GRF.glColor4f(.4f, .4f, .4f, .8f)
+        Drawing.GL.glColor4f(.4f, .4f, .4f, .8f)
         val d = p.devide(TDMain.bs)
-        Drawing.fillRect(d.xi * TDMain.bs * 1f, d.yi * TDMain.bs * 1f, TDMain.bs * 1f, TDMain.bs * 1f)
+        Drawing.Rect(d.xi * TDMain.bs * 1f, d.yi * TDMain.bs * 1f, TDMain.bs * 1f, TDMain.bs * 1f, true)
     }
 
     private fun drawNodeConnections() {
@@ -50,8 +49,8 @@ object FieldDraw {
     }
 
     private fun drawArrowLine(c: CColor, x1: Int, y1: Int, x2: Int, y2: Int) {
-        JOGLEntry.GRF.glColor4f(c.r, c.g, c.b, c.a)
-        Drawing.drawLine(x1 * 1f, y1 * 1f, x2 * 1f, y2 * 1f)
+        Drawing.GL.glColor4f(c.r, c.g, c.b, c.a)
+        Drawing.Line(x1 * 1f, y1 * 1f, x2 * 1f, y2 * 1f)
 //        val magn = sqrt(Point2D.distanceSq(x1.toDouble(), y1.toDouble(), x2.toDouble(), y2.toDouble())) * 0.1
 //        val a = atan2(y2 - y1, x2 - x1)
 //        val l1X = (x2 - magn * cos(a + Math.toRadians(45.0))).toInt()
@@ -65,15 +64,15 @@ object FieldDraw {
     private fun drawGrid() {
         for (y in 0 until TDMain.n) {
             for (x in 0 until TDMain.n) {
-                JOGLEntry.GRF.glColor4f(.2f, .2f, .2f, .4f)
-                Drawing.drawLineRect(x * TDMain.bs * 1f, y * TDMain.bs * 1f, TDMain.bs * 1f, TDMain.bs * 1f)
+                Drawing.GL.glColor4f(.2f, .2f, .2f, .4f)
+                Drawing.Rect(x * TDMain.bs * 1f, y * TDMain.bs * 1f, TDMain.bs * 1f, TDMain.bs * 1f, false)
             }
         }
     }
 
     fun repaintProcess() {
-        JOGLEntry.GRF.glColor3f(0.3f, 0.3f, 0.3f)
-        Drawing.fillRect(0f, 0f, TDMain.fieldWidth * 1f, TDMain.fieldHeight * 1f)
+        Drawing.GL.glColor3f(0.3f, 0.3f, 0.3f)
+        Drawing.Rect(0f, 0f, TDMain.fieldWidth * 1f, TDMain.fieldHeight * 1f, true)
         drawWorld()
     }
 }
