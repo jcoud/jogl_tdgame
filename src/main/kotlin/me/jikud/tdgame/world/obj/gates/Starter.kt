@@ -1,22 +1,22 @@
 package me.jikud.tdgame.world.obj.gates
 
-import me.jikud.tdgame.core.Drawing
-import me.jikud.tdgame.core.Global
-import me.jikud.tdgame.core.Timer
-import me.jikud.tdgame.helpers.CColor
-import me.jikud.tdgame.helpers.PPoint
+import me.jikud.engine.core.helpers.CColor
+import me.jikud.engine.core.helpers.PPoint
+import me.jikud.engine.core.main.GLRenderHelper
+import me.jikud.engine.core.main.Timer
 import me.jikud.tdgame.world.field.Field
 import me.jikud.tdgame.world.field.FieldProcessorQueue
 import me.jikud.tdgame.world.obj.Entity
+import me.jikud.tdgame.world.obj.ITimerUpdatable
 import me.jikud.tdgame.world.obj.NodePoint
 import me.jikud.tdgame.world.obj.TileObjUtils
 
 
-class Starter(pos: PPoint, name: String, color: Int) : NodePoint(pos, name, color) {
+class Starter(pos: PPoint, name: String, color: Int) : NodePoint(pos, name, color), ITimerUpdatable {
     //    private var prevInstanceOfObj: Entity? = null
     private var spawnTimer = .0
 
-    private var timer = Timer()
+    override var timer = Timer()
 
 
      private fun startTimer() {
@@ -32,7 +32,6 @@ class Starter(pos: PPoint, name: String, color: Int) : NodePoint(pos, name, colo
     }
 
     private fun spawn() {
-        if (!Global.TileTimer_isUpdatable) return
         startTimer()
         if (!timer.trigger(spawnTimer)) return
         val e = TileObjUtils.makeWithRandomParams<Entity>(PPoint(this.center))
@@ -43,8 +42,8 @@ class Starter(pos: PPoint, name: String, color: Int) : NodePoint(pos, name, colo
 
     override fun draw() {
         val c = CColor(this.color)
-        Drawing.GL.glColor3f(c.r, c.g, c.b)
-        Drawing.Rect(
+        GLRenderHelper.JGL.glColor3f(c.r, c.g, c.b)
+        GLRenderHelper.Rect(
             this.pos.x - me.jikud.tdgame.TDMain.bs / 2,
             this.pos.y - me.jikud.tdgame.TDMain.bs / 2,
             me.jikud.tdgame.TDMain.bs * 1f,
@@ -56,6 +55,6 @@ class Starter(pos: PPoint, name: String, color: Int) : NodePoint(pos, name, colo
     }
 
     override fun drawName(customName: String) {
-        super.drawName("$customName TA${timer.actual} TU${timer.current} SP: $spawnTimer")
+        super.drawName("$customName TU${timer.current} SP: $spawnTimer")
     }
 }

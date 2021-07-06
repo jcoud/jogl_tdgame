@@ -1,6 +1,7 @@
 package me.jikud.tdgame.world.obj
 
-import me.jikud.tdgame.helpers.PPoint
+import me.jikud.engine.core.helpers.PPoint
+import me.jikud.tdgame.TDMain
 import me.jikud.tdgame.world.field.Field
 import me.jikud.tdgame.world.obj.gates.Ender
 import me.jikud.tdgame.world.obj.gates.Starter
@@ -17,7 +18,7 @@ object TileObjUtils {
             Entity::class.java.name ->
                 Entity(PPoint.ZERO, "EMPTY", 0f, Color.BLACK.rgb, 0f) as T
             Tower::class.java.name -> object :
-                    Tower(PPoint.ZERO, "EMPTY", 0f, Color.BLACK.rgb) {} as T
+                Tower(PPoint.ZERO, "EMPTY", 0f, Color.BLACK.rgb) {} as T
             NodePoint::class.java.name ->
                 NodePoint(PPoint.ZERO, "EMPTY", Color.BLACK.rgb) as T
             else -> throw Error("dwqw $w")
@@ -30,21 +31,21 @@ object TileObjUtils {
 //                val s = 15 + Random.nextInt(10)
                 val s = 20
                 Entity(
-                        pos.snapToGrid().add(me.jikud.tdgame.TDMain.bs.minus(s) / 2f),
-                        "E${Entity.count + 1}",
-                        s * 1f,
-                        Color.WHITE.rgb,
-//                    Random.nextInt(0xffffff),
-                        (Random.nextInt(10) + 4f) / 5f
+                    PPoint.snapToGrid(pos, TDMain.bs * 1f).translate(TDMain.bs.minus(s) / 2f),
+                    "E${Entity.count + 1}",
+                    s * 1f,
+//                        Color.WHITE.rgb,
+                    Random.nextInt(0xffffff),
+                    (Random.nextInt(10) + 4f) / 5f
                 ).apply {
                     health = Random.nextInt(300) + 2000
                 } as T
             }
             NodePoint::class -> {
                 NodePoint(
-                        pos.snapToGrid().add(me.jikud.tdgame.TDMain.bs / 2f),
-                        "N${Field.nodeListOrder.size + 1}",
-                        Color.BLACK.rgb
+                    PPoint.snapToGrid(pos, TDMain.bs * 1f).translate(TDMain.bs / 2f),
+                    "N${Field.nodeListOrder.size + 1}",
+                    Color.WHITE.rgb
                 ) as T
             }
 //            Tower::class -> {
@@ -60,16 +61,16 @@ object TileObjUtils {
 //            }
             Starter::class -> {
                 Starter(
-                        pos.snapToGrid().add(me.jikud.tdgame.TDMain.bs / 2f),
-                        "Start",
-                        Color.YELLOW.rgb
+                    PPoint.snapToGrid(pos, TDMain.bs * 1f).translate(TDMain.bs / 2f),
+                    "Start",
+                    Color.YELLOW.rgb
                 ) as T
             }
             Ender::class -> {
                 Ender(
-                        pos.snapToGrid().add(me.jikud.tdgame.TDMain.bs / 2f),
-                        "End",
-                        Color.MAGENTA.rgb
+                    PPoint.snapToGrid(pos, TDMain.bs * 1f).translate(TDMain.bs / 2f),
+                    "End",
+                    Color.MAGENTA.rgb
                 ) as T
             }
             else ->
@@ -79,10 +80,10 @@ object TileObjUtils {
 
     inline fun <reified T : TileObj> makeWithRandomParams(): T {
         return makeWithRandomParams(
-                PPoint(
-                        (me.jikud.tdgame.TDMain.bs + Random.nextInt(me.jikud.tdgame.TDMain.fieldWidth - me.jikud.tdgame.TDMain.bs)).toFloat(),
-                        (me.jikud.tdgame.TDMain.bs + Random.nextInt(me.jikud.tdgame.TDMain.fieldHeight - me.jikud.tdgame.TDMain.bs)).toFloat()
-                )
+            PPoint(
+                (TDMain.bs + Random.nextInt(TDMain.fieldWidth - TDMain.bs)).toFloat(),
+                (TDMain.bs + Random.nextInt(TDMain.fieldHeight - TDMain.bs)).toFloat()
+            )
         )
     }
 }

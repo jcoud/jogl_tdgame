@@ -1,6 +1,7 @@
 package me.jikud.tdgame.world.obj
 
-import me.jikud.tdgame.helpers.PPoint
+import me.jikud.engine.core.helpers.PPoint
+
 
 open class NodePoint (
     pos: PPoint,

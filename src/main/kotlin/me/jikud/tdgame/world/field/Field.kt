@@ -1,6 +1,7 @@
 package me.jikud.tdgame.world.field
 
-import me.jikud.tdgame.helpers.PPoint
+import me.jikud.engine.core.helpers.PPoint
+import me.jikud.tdgame.TDMain
 import me.jikud.tdgame.mapping.MapImpl
 import me.jikud.tdgame.mapping.WorldSaveDataHolder
 import me.jikud.tdgame.world.obj.*
@@ -16,43 +17,34 @@ object Field {
     object FieldTileSelection {
         inline fun <reified T : TileObj> getSelectedObj(pos: PPoint): T? {
             return when (T::class) {
-                Entity::class ->
-                    if (entityListOrder.none { it.pos.toIndex() == pos.toIndex() }) null
-                    else entityListOrder.filter { it.pos.toIndex() == pos.toIndex() }[0] as T
-                Tower::class ->
-                    if (towerListOrder.none { it.pos.toIndex() == pos.toIndex() }) null
-                    else towerListOrder.filter { it.pos.toIndex() == pos.toIndex() }[0] as T
-                NodePoint::class ->
-                    if (nodeListOrder.none { it.pos.toIndex() == pos.toIndex() }) null
-                    else nodeListOrder.filter { it.pos.toIndex() == pos.toIndex() }[0] as T
+                Entity::class -> entityListOrder.getByPos(pos) as T?
+                Tower::class -> towerListOrder.getByPos(pos) as T?
+                NodePoint::class -> nodeListOrder.getByPos(pos) as T?
                 else -> null
             }
         }
     }
 
     fun <E : TileObj> LinkedList<E>.getByPos(pos: PPoint): E? {
-//        this.forEach {
-//            if (it.center.dist(pos) <= it.size * it.size)
-//                return it
-//        }
-        return this.getByPosIndex(pos.toIndex())
+        return this.getByPosIndex(pos.toIndex(TDMain.bs, TDMain.n))
+    }
+
+    private fun <E : TileObj> LinkedList<E>.getByPosIndex(posInd: Int): E? {
+        this.forEach {
+            if (it.pos.toIndex(TDMain.bs, TDMain.n) == posInd)
+                return it
+        }
+        return null
     }
 
     private fun <E : TileObj> LinkedList<E>.containsFieldIndex(arrInd: Int): Boolean {
         this.forEach {
-            if (it.pos.toIndex() == arrInd)
+            if (it.pos.toIndex(TDMain.bs, TDMain.n) == arrInd)
                 return true
         }
         return false
     }
 
-    private fun <E : TileObj> LinkedList<E>.getByPosIndex(posInd: Int): E? {
-        this.forEach {
-            if (it.pos.toIndex() == posInd)
-                return it
-        }
-        return null
-    }
 
     private fun <E : TileObj> LinkedList<E>.removeAtPosIndex(posInd: Int) {
         this.remove(this.getByPosIndex(posInd))
@@ -64,16 +56,16 @@ object Field {
         NEW_GAME, RUN, STOP, NONE
     }
 
-    lateinit var entityListOrder: LinkedList<Entity>
-    lateinit var nodeListOrder: LinkedList<NodePoint>
-    lateinit var towerListOrder: LinkedList<Tower>
-    const val gridTileSize = me.jikud.tdgame.TDMain.bs * 4
-    const val gridLength = me.jikud.tdgame.TDMain.fieldWidth / gridTileSize
-    val grid = Array(gridLength) { x -> Array(gridLength) { y -> FieldTile(x, y) } }
+    var entityListOrder: LinkedList<Entity> = LinkedList()
+    var nodeListOrder: LinkedList<NodePoint> = LinkedList()
+    var towerListOrder: LinkedList<Tower> = LinkedList()
+    const val gridScanTileSize = TDMain.bs * 4
+    const val gridScanLength = TDMain.fieldWidth / gridScanTileSize
+    val gridScan = Array(gridScanLength) { x -> Array(gridScanLength) { y -> FieldTile(x, y) } }
 
 
-    private lateinit var start: Starter
-    private lateinit var end: Ender
+    lateinit var start: Starter
+    lateinit var end: Ender
 
     fun saveField(): HashMap<String, WorldSaveDataHolder> {
         val a = LinkedHashMap<String, WorldSaveDataHolder>()
@@ -88,7 +80,7 @@ object Field {
         nodeListOrder = LinkedList()
         val s = data["Start"]!!
         val e = data["End"]!!
-        start = Starter(PPoint(s.x.toFloat(), s.y.toFloat()), "Start", Color.YELLOW.rgb)
+        start = Starter(PPoint(s.x, s.y), "Start", Color.YELLOW.rgb)
         nodeListOrder.add(start)
 //        val ar = ArrayList<NodePoint>(nodeListOrder.values)
 //        for (i in 1 until ar.size-1) {
@@ -97,9 +89,9 @@ object Field {
 //
         for ((k, v) in data) {
             if (k == "Start" || k == "End") continue
-            nodeListOrder.add(NodePoint(PPoint(v.x.toFloat(), v.y.toFloat()), k, Color.BLACK.rgb))
+            nodeListOrder.add(NodePoint(PPoint(v.x.toFloat(), v.y.toFloat()), k, Color.WHITE.rgb))
         }
-        end = Ender(PPoint(e.x.toFloat(), e.y.toFloat()), "End", Color.MAGENTA.rgb)
+        end = Ender(PPoint(e.x, e.y), "End", Color.MAGENTA.rgb)
         nodeListOrder.add(end)
     }
 
@@ -140,24 +132,48 @@ object Field {
                 if (entityListOrder.contains(obj)) return
                 entityListOrder.add(obj)
             }
+            is Starter -> {
+                if (nodeListOrder.isEmpty()) {
+                    nodeListOrder.add(obj)
+                    return
+                }
+                val node = nodeListOrder.first()
+                nodeListOrder[0] = TileObjUtils.makeWithRandomParams(node.pos)
+                start = obj
+                nodeListOrder.addFirst(obj)
+                return
+            }
+            is Ender -> {
+                if (nodeListOrder.isEmpty()) {
+                    nodeListOrder.add(obj)
+                    return
+                }
+                val node = nodeListOrder.last()
+                if (node !is Starter) {
+                    nodeListOrder[nodeListOrder.size - 1] = TileObjUtils.makeWithRandomParams(node.pos)
+                }
+                end = obj
+                nodeListOrder.add(obj)
+                return
+            }
             is NodePoint -> {
-                if (nodeListOrder.containsFieldIndex(obj.pos.toIndex()) || nodeListOrder.contains(obj)) return
-                val ln = nodeListOrder.last()
-                nodeListOrder[nodeListOrder.size - 1] = TileObjUtils.makeWithRandomParams(ln.pos)
-                end = obj as Ender
-                nodeListOrder.add(end)
+                if (nodeListOrder.isEmpty()) {
+                    nodeListOrder.add(obj)
+                    return
+                }
+                if (!nodeListOrder.none { it.pos.toIndex(TDMain.bs, TDMain.n) == obj.pos.toIndex(TDMain.bs, TDMain.n) }) return
+                nodeListOrder.add(nodeListOrder.size - 1, obj)
             }
             is Tower -> {
-                if (towerListOrder.containsFieldIndex(obj.pos.toIndex()) || towerListOrder.contains(obj)) return
+                if (towerListOrder.containsFieldIndex(obj.pos.toIndex(TDMain.bs, TDMain.n)) || towerListOrder.contains(obj)) return
                 towerListOrder.add(obj)
             }
         }
     }
 
     private fun run() {
-        grid.forEach { it.forEach(FieldTile::clear) }
+        gridScan.forEach { it.forEach(FieldTile::clear) }
         updateTiles()
-        FieldProcessorQueue.unloadActionQueue()
     }
 
     private fun updateTiles() {
@@ -194,7 +210,19 @@ object Field {
     fun removeNodeAt(posInd: Int) {
         if (!hasNodeAt(posInd)) return
         val byPosIndex = nodeListOrder.getByPosIndex(posInd)
-        if (byPosIndex is Ender || byPosIndex is Starter) return
+        when (byPosIndex) {
+            is Starter -> {
+                val i = if (nodeListOrder.size > 0) 1 else 0
+                val n = nodeListOrder[i]
+                start = Starter(n.pos, start.name, start.color)
+                nodeListOrder[i] = start
+            }
+            is Ender -> {
+                val n = nodeListOrder[nodeListOrder.size - 2]
+                end = Ender(n.pos, end.name, end.color)
+                nodeListOrder[nodeListOrder.size - 2] = end
+            }
+        }
         nodeListOrder.removeAtPosIndex(posInd)
     }
 
@@ -205,7 +233,15 @@ object Field {
     }
 
     fun hasEmptyTileAt(pos: PPoint): Boolean {
-        return !hasTowerAt(pos.toIndex()) && !hasNodeAt(pos.toIndex())
+        val b1 = hasTowerAt(pos.toIndex(TDMain.bs, TDMain.n))
+        val b2 = hasNodeAt(pos.toIndex(TDMain.bs, TDMain.n))
+        return !b1 && !b2
+    }
+
+    fun clear() {
+        nodeListOrder.clear()
+        towerListOrder.clear()
+        entityListOrder.clear()
     }
 }
 

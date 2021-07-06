@@ -1,11 +1,15 @@
 package me.jikud.tdgame.world.field
 
+import me.jikud.engine.core.gui.GuiCore
+import me.jikud.engine.core.helpers.CColor
+import me.jikud.engine.core.helpers.PPoint
+import me.jikud.engine.core.main.GLRenderHelper
+import me.jikud.engine.core.main.GLRenderHelper.JGL
+import me.jikud.engine.core.main.GLRenderHelper.Rect
+import me.jikud.engine.core.main.IOComponent
 import me.jikud.tdgame.TDMain
-import me.jikud.tdgame.core.Drawing
-import me.jikud.tdgame.core.Global
-import me.jikud.tdgame.gui.GuiIOTransfer
-import me.jikud.tdgame.helpers.CColor
-import me.jikud.tdgame.helpers.PPoint
+import me.jikud.tdgame.Global
+import me.jikud.tdgame.gui.sets.editor.EditorGuiGroup
 import me.jikud.tdgame.world.obj.TileObj
 import java.awt.Color
 
@@ -18,24 +22,23 @@ object FieldDraw {
     }
 
     private fun drawWorld() {
-        if (Global.debug) {
-            drawGrid()
+        drawGrid()
+        if (GuiCore.currentGui is EditorGuiGroup || Global.debugMode) {
             drawCursorGridTileHovering()
             drawNodeConnections()
-            Field.grid.forEach { it.forEach(FieldTile::rect) }
-            Field.grid.forEach { it.forEach(FieldTile::highlight) }
+            Field.gridScan.forEach { it.forEach(FieldTile::rect) }
+            Field.gridScan.forEach { it.forEach(FieldTile::highlight) }
         }
         showObj()
-
     }
 
 
     private fun drawCursorGridTileHovering() {
-        if (GuiIOTransfer.y >= TDMain.fieldHeight) return
-        val p = PPoint(GuiIOTransfer.x, GuiIOTransfer.y)
-        Drawing.GL.glColor4f(.4f, .4f, .4f, .8f)
+        if (IOComponent.y < TDMain.guiWithGapHeight) return
+        val p = PPoint(IOComponent.x, IOComponent.y)
+        JGL.glColor4f(.4f, .4f, .4f, .8f)
         val d = p.devide(TDMain.bs)
-        Drawing.Rect(d.xi * TDMain.bs * 1f, d.yi * TDMain.bs * 1f, TDMain.bs * 1f, TDMain.bs * 1f, true)
+        Rect(d.xi * TDMain.bs * 1f, d.yi * TDMain.bs * 1f + TDMain.fieldHeightGap, TDMain.bs * 1f, TDMain.bs * 1f, true)
     }
 
     private fun drawNodeConnections() {
@@ -53,8 +56,8 @@ object FieldDraw {
     }
 
     private fun drawArrowLine(c: CColor, x1: Int, y1: Int, x2: Int, y2: Int) {
-        Drawing.GL.glColor4f(c.r, c.g, c.b, c.a)
-        Drawing.Line(x1 * 1f, y1 * 1f, x2 * 1f, y2 * 1f)
+        JGL.glColor4f(c.r, c.g, c.b, c.a)
+        GLRenderHelper.Line(x1 * 1f, y1 * 1f, x2 * 1f, y2 * 1f)
 //        val magn = sqrt(Point2D.distanceSq(x1.toDouble(), y1.toDouble(), x2.toDouble(), y2.toDouble())) * 0.1
 //        val a = atan2(y2 - y1, x2 - x1)
 //        val l1X = (x2 - magn * cos(a + Math.toRadians(45.0))).toInt()
@@ -68,15 +71,17 @@ object FieldDraw {
     private fun drawGrid() {
         for (y in 0 until TDMain.n) {
             for (x in 0 until TDMain.n) {
-                Drawing.GL.glColor4f(.2f, .2f, .2f, .4f)
-                Drawing.Rect(x * TDMain.bs * 1f, y * TDMain.bs * 1f, TDMain.bs * 1f, TDMain.bs * 1f, false)
+                JGL.glTranslatef(0f, TDMain.guiWithGapHeight * 1f, 0f)
+                JGL.glColor4f(.2f, .2f, .2f, .4f)
+                Rect(x * TDMain.bs * 1f, y * TDMain.bs * 1f, TDMain.bs * 1f, TDMain.bs * 1f, false)
             }
         }
     }
 
     fun repaintProcess() {
-        Drawing.GL.glColor3f(0.3f, 0.3f, 0.3f)
-        Drawing.Rect(0f, 0f, TDMain.fieldWidth * 1f, TDMain.fieldHeight * 1f, true)
+        JGL.glTranslatef(0f, TDMain.guiWithGapHeight * 1f, 0f)
+        JGL.glColor3f(0.3f, 0.3f, 0.3f)
+        Rect(0f, 0f, TDMain.fieldWidth * 1f, TDMain.fieldHeight * 1f, true)
         drawWorld()
     }
 }

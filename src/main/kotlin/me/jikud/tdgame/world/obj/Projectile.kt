@@ -1,7 +1,7 @@
 package me.jikud.tdgame.world.obj
 
-import me.jikud.tdgame.core.Loop
-import me.jikud.tdgame.helpers.PPoint
+import me.jikud.engine.core.helpers.PPoint
+import me.jikud.engine.core.main.GLRenderHelper
 import java.awt.Color
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -9,12 +9,14 @@ import kotlin.math.sin
 
 class Projectile(
     pos: PPoint,
-    val speed: Float,
-    val target: Entity,
-    val damage: Int
+    private val speed: Float,
+    private val target: Entity,
+    private val damage: Int
 ) : TileObj(pos, name = "", size = 1f, color = Color.BLACK.rgb), IMovable {
 
-    override var state = TileObjState.WAITING
+    init {
+        state = TileObjState.WAITING
+    }
 
     private fun applyDamage() {
         target.health -= damage
@@ -35,8 +37,14 @@ class Projectile(
         }
         state = TileObjState.MOVING
         val angle = atan2((target.center.y - this.center.y), (target.center.x - this.center.x))
-        val _x: Float = (cos(angle) * this.speed * Loop.dt).toFloat()
-        val _y: Float = (sin(angle) * this.speed * Loop.dt).toFloat()
+        val _x: Float = (cos(angle) * this.speed * 1).toFloat()
+        val _y: Float = (sin(angle) * this.speed * 1).toFloat()
         pos.translate(_x, _y)
+    }
+
+    override fun draw() {
+        val r = 3f
+        GLRenderHelper.JGL.glColor3f(.0f, .0f, .0f)
+        GLRenderHelper.Circle(center.x, center.y, r, true)
     }
 }
